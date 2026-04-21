@@ -1,22 +1,33 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: HR & Payroll Management System API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication operations
+  - name: employees
+    description: Employee CRUD operations
+  - name: departments
+    description: Department operations
+  - name: payroll
+    description: Payroll operations
+  - name: leaves
+    description: Leave management operations
+  - name: dashboard
+    description: Dashboard summary operations
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +35,493 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginBody"
+      responses:
+        "200":
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: Logout
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current user session
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+        "401":
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /employees:
+    get:
+      operationId: listEmployees
+      tags: [employees]
+      summary: List all employees
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: departmentId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, inactive]
+      responses:
+        "200":
+          description: List of employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Employee"
+    post:
+      operationId: createEmployee
+      tags: [employees]
+      summary: Create employee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateEmployeeBody"
+      responses:
+        "201":
+          description: Employee created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /employees/{id}:
+    get:
+      operationId: getEmployee
+      tags: [employees]
+      summary: Get employee by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateEmployee
+      tags: [employees]
+      summary: Update employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateEmployeeBody"
+      responses:
+        "200":
+          description: Updated employee
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+    delete:
+      operationId: deleteEmployee
+      tags: [employees]
+      summary: Delete employee
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /employees/{id}/upload-photo:
+    post:
+      operationId: uploadEmployeePhoto
+      tags: [employees]
+      summary: Upload employee profile photo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                photoUrl:
+                  type: string
+              required:
+                - photoUrl
+      responses:
+        "200":
+          description: Photo uploaded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Employee"
+
+  /departments:
+    get:
+      operationId: listDepartments
+      tags: [departments]
+      summary: List all departments
+      responses:
+        "200":
+          description: List of departments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Department"
+    post:
+      operationId: createDepartment
+      tags: [departments]
+      summary: Create department
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepartmentBody"
+      responses:
+        "201":
+          description: Department created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+
+  /departments/{id}:
+    put:
+      operationId: updateDepartment
+      tags: [departments]
+      summary: Update department
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDepartmentBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Department"
+    delete:
+      operationId: deleteDepartment
+      tags: [departments]
+      summary: Delete department
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /payroll:
+    get:
+      operationId: listPayroll
+      tags: [payroll]
+      summary: List payroll records
+      parameters:
+        - name: employeeId
+          in: query
+          schema:
+            type: integer
+        - name: month
+          in: query
+          schema:
+            type: integer
+        - name: year
+          in: query
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Payroll records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payroll"
+    post:
+      operationId: createPayroll
+      tags: [payroll]
+      summary: Create payroll record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePayrollBody"
+      responses:
+        "201":
+          description: Payroll created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payroll"
+
+  /payroll/{id}:
+    put:
+      operationId: updatePayroll
+      tags: [payroll]
+      summary: Update payroll record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePayrollBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payroll"
+    delete:
+      operationId: deletePayroll
+      tags: [payroll]
+      summary: Delete payroll record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /leaves:
+    get:
+      operationId: listLeaves
+      tags: [leaves]
+      summary: List leave requests
+      parameters:
+        - name: employeeId
+          in: query
+          schema:
+            type: integer
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, approved, rejected]
+      responses:
+        "200":
+          description: Leave requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaveRequest"
+    post:
+      operationId: createLeave
+      tags: [leaves]
+      summary: Submit leave request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateLeaveBody"
+      responses:
+        "201":
+          description: Leave request submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveRequest"
+
+  /leaves/{id}:
+    put:
+      operationId: updateLeave
+      tags: [leaves]
+      summary: Update leave status (approve/reject)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateLeaveBody"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LeaveRequest"
+    delete:
+      operationId: deleteLeave
+      tags: [leaves]
+      summary: Delete leave request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Dashboard summary stats
+      responses:
+        "200":
+          description: Summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/payroll-by-department:
+    get:
+      operationId: getPayrollByDepartment
+      tags: [dashboard]
+      summary: Payroll cost grouped by department
+      responses:
+        "200":
+          description: Payroll by department
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PayrollByDepartment"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Recent HR activity feed
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +532,418 @@ components:
       required:
         - status
 
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    LoginBody:
+      type: object
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      required:
+        - username
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        user:
+          $ref: "#/components/schemas/AuthUser"
+        token:
+          type: string
+        lastLogin:
+          type: string
+          nullable: true
+      required:
+        - user
+        - token
+
+    AuthUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, hr_manager, employee]
+        lastLogin:
+          type: string
+          nullable: true
+      required:
+        - id
+        - username
+        - email
+        - role
+
+    Department:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        managerId:
+          type: integer
+          nullable: true
+        employeeCount:
+          type: integer
+        createdAt:
+          type: string
+      required:
+        - id
+        - name
+        - employeeCount
+        - createdAt
+
+    CreateDepartmentBody:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+          nullable: true
+        managerId:
+          type: integer
+          nullable: true
+      required:
+        - name
+
+    Employee:
+      type: object
+      properties:
+        id:
+          type: integer
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        position:
+          type: string
+        departmentId:
+          type: integer
+          nullable: true
+        departmentName:
+          type: string
+          nullable: true
+        hireDate:
+          type: string
+        salary:
+          type: number
+        status:
+          type: string
+          enum: [active, inactive]
+        photoUrl:
+          type: string
+          nullable: true
+        address:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - firstName
+        - lastName
+        - email
+        - position
+        - hireDate
+        - salary
+        - status
+        - createdAt
+
+    CreateEmployeeBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        position:
+          type: string
+        departmentId:
+          type: integer
+          nullable: true
+        hireDate:
+          type: string
+        salary:
+          type: number
+        status:
+          type: string
+          enum: [active, inactive]
+        address:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+      required:
+        - firstName
+        - lastName
+        - email
+        - position
+        - hireDate
+        - salary
+        - status
+
+    UpdateEmployeeBody:
+      type: object
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+          nullable: true
+        position:
+          type: string
+        departmentId:
+          type: integer
+          nullable: true
+        hireDate:
+          type: string
+        salary:
+          type: number
+        status:
+          type: string
+          enum: [active, inactive]
+        address:
+          type: string
+          nullable: true
+        photoUrl:
+          type: string
+          nullable: true
+
+    Payroll:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        employeeName:
+          type: string
+          nullable: true
+        month:
+          type: integer
+        year:
+          type: integer
+        basicSalary:
+          type: number
+        bonuses:
+          type: number
+        deductions:
+          type: number
+        netSalary:
+          type: number
+        status:
+          type: string
+          enum: [pending, processed, paid]
+        processedAt:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - employeeId
+        - month
+        - year
+        - basicSalary
+        - bonuses
+        - deductions
+        - netSalary
+        - status
+        - createdAt
+
+    CreatePayrollBody:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+        month:
+          type: integer
+        year:
+          type: integer
+        basicSalary:
+          type: number
+        bonuses:
+          type: number
+        deductions:
+          type: number
+        status:
+          type: string
+          enum: [pending, processed, paid]
+      required:
+        - employeeId
+        - month
+        - year
+        - basicSalary
+        - bonuses
+        - deductions
+        - status
+
+    LeaveRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        employeeId:
+          type: integer
+        employeeName:
+          type: string
+          nullable: true
+        leaveType:
+          type: string
+          enum: [annual, sick, maternity, paternity, unpaid]
+        startDate:
+          type: string
+        endDate:
+          type: string
+        reason:
+          type: string
+          nullable: true
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        reviewedBy:
+          type: integer
+          nullable: true
+        reviewNote:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+      required:
+        - id
+        - employeeId
+        - leaveType
+        - startDate
+        - endDate
+        - status
+        - createdAt
+
+    CreateLeaveBody:
+      type: object
+      properties:
+        employeeId:
+          type: integer
+        leaveType:
+          type: string
+          enum: [annual, sick, maternity, paternity, unpaid]
+        startDate:
+          type: string
+        endDate:
+          type: string
+        reason:
+          type: string
+          nullable: true
+      required:
+        - employeeId
+        - leaveType
+        - startDate
+        - endDate
+
+    UpdateLeaveBody:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        reviewNote:
+          type: string
+          nullable: true
+      required:
+        - status
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalEmployees:
+          type: integer
+        activeEmployees:
+          type: integer
+        totalDepartments:
+          type: integer
+        totalPayrollThisMonth:
+          type: number
+        pendingLeaves:
+          type: integer
+        newHiresThisMonth:
+          type: integer
+      required:
+        - totalEmployees
+        - activeEmployees
+        - totalDepartments
+        - totalPayrollThisMonth
+        - pendingLeaves
+        - newHiresThisMonth
+
+    PayrollByDepartment:
+      type: object
+      properties:
+        departmentName:
+          type: string
+        totalSalary:
+          type: number
+        employeeCount:
+          type: integer
+      required:
+        - departmentName
+        - totalSalary
+        - employeeCount
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+        description:
+          type: string
+        timestamp:
+          type: string
+        actor:
+          type: string
+          nullable: true
+      required:
+        - id
+        - type
+        - description
+        - timestamp
